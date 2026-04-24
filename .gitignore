@@ -1,7 +1,7 @@
 
 .DS_Store
-/music/
+# /music/
 musiclist.json
 node_modules
-config.js
+# config.js
 upload.sh
