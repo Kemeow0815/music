@@ -47,8 +47,6 @@ function initLocalPlayer() {
     lrcType: 3,
     audio: encodedLocalMusic,
     listFolded: window.innerWidth < 768 ? true : false,
-    preload: "metadata",
-    mutex: true,
   });
 
   heo.setupMediaSessionHandlers(ap);
@@ -217,15 +215,8 @@ var heo = {
     }
   },
 
-  // 缓存封面图 blob URL，避免重复请求
-  coverCache: {},
-
-  getCachedCoverUrl: function(coverUrl) {
-    if (this.coverCache[coverUrl]) {
-      return this.coverCache[coverUrl];
-    }
-    return coverUrl;
-  },
+  // 缓存 artwork 避免重复请求
+  _artworkCache: {},
 
   setMediaMetadata: function (aplayerObj, isSongPlaying) {
     const audio = aplayerObj.list.audios[aplayerObj.list.index];
@@ -243,14 +234,24 @@ var heo = {
         songName = audio.name;
         songArtist = audio.artist;
       }
-      // 只使用一个 artwork 项，避免重复请求
+
+      // 使用缓存的 artwork 或创建新的
+      if (!this._artworkCache[coverUrl]) {
+        this._artworkCache[coverUrl] = [
+          { src: coverUrl, sizes: "96x96", type: "image/jpeg" },
+          { src: coverUrl, sizes: "128x128", type: "image/jpeg" },
+          { src: coverUrl, sizes: "192x192", type: "image/jpeg" },
+          { src: coverUrl, sizes: "256x256", type: "image/jpeg" },
+          { src: coverUrl, sizes: "384x384", type: "image/jpeg" },
+          { src: coverUrl, sizes: "512x512", type: "image/jpeg" },
+        ];
+      }
+
       navigator.mediaSession.metadata = new MediaMetadata({
         title: songName,
         artist: songArtist,
         album: audio.album,
-        artwork: [
-          { src: coverUrl, sizes: "512x512", type: "image/jpeg" },
-        ],
+        artwork: this._artworkCache[coverUrl],
       });
     } else {
       console.log("当前浏览器不支持 Media Session API");
